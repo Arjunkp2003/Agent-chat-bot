@@ -76,7 +76,7 @@ if prompt := st.chat_input(placeholder='What is machine learning?'):
     llm,
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     handle_parsing_errors=True,
-    max_iterations=3   # 🚀 Stops after 3 tool calls
+    
 )
 
 # What a CallbackHandler does
@@ -153,4 +153,5 @@ if prompt := st.chat_input(placeholder='What is machine learning?'):
 # ✅ To make it answer based on previous questions:
 
 # You need to feed the conversation history into the LLM.
+
 # There are two common ways in LangChain:
