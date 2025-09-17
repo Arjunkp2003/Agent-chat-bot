@@ -32,10 +32,6 @@ if 'messages' not in st.session_state:
         {'role': 'assistant', 'content': 'Hi, I am a chatbot who can search the web. How can I help you?'}
     ]
 
-# Creates st.session_state.messages (a list of dicts) to store conversation history.
-
-# If not already there, initializes with a greeting.
-
 # Display past messages
 for msg in st.session_state.messages:
     st.chat_message(msg['role']).write(msg['content'])
@@ -43,55 +39,49 @@ for msg in st.session_state.messages:
 # Handle new user input
 if prompt := st.chat_input(placeholder='What is machine learning?'):
 
-# Adds a chat input box.
-
-# If the user types something, it gets stored in prompt.
-# Appends the user’s input to the conversation history.
+    # Save user message
     st.session_state.messages.append({'role': 'user', 'content': prompt})
 
+    # Initialize LLM
     llm = ChatGroq(
         groq_api_key=api_key,
-        model_name='llama-3.1-8b-instant',
+        model_name='llama-3.3-70b-versatile',  # ✅ update with available Groq model
         streaming=True
     )
 
     tools = [search_tool, arxiv_tool, wiki_tool]
 
+    # ✅ Use conversational agent type
     search_engine = initialize_agent(
         tools,
         llm,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        handle_parsing_errors=True
+        agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+        handle_parsing_errors=True,
+        max_iterations=3,
+        early_stopping_method="generate"
     )
-    search_engine = initialize_agent(
-    tools,
-    llm,
-    agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
-    handle_parsing_errors=True
-)
 
-
-    search_engine = initialize_agent(
-    tools,
-    llm,
-    agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-    handle_parsing_errors=True,
-    
-)
-
-# What a CallbackHandler does
-
-# In LangChain, callbacks are hooks that let you see what’s happening inside the agent/LLM while it’s running.
-
-# Instead of just waiting for the final response, the callback can stream intermediate steps (like tool calls, reasoning traces, partial tokens, etc.).
+    # Callback handler for streaming
     with st.chat_message('assistant'):
         st_cb = StreamlitCallbackHandler(st.container(), expand_new_thoughts=False)
 
-        # ✅ Only send latest user input, not the whole history
-        response = search_engine.run(prompt, callbacks=[st_cb])
+        # ✅ Provide both "input" and "chat_history"
+        response = search_engine.run(
+            {
+                "input": prompt,
+                "chat_history": [
+                    (msg["role"], msg["content"])
+                    for msg in st.session_state.messages[:-1]  # exclude latest user input
+                ]
+            },
+            callbacks=[st_cb]
+        )
 
+        # Save assistant response
         st.session_state.messages.append({'role': 'assistant', 'content': response})
         st.write(response)
+
+
 
 
 # So the flow is: initialize → user enters session ID → restore old chat → take new input → run LLM → store + display → persist via session_state.
@@ -153,5 +143,4 @@ if prompt := st.chat_input(placeholder='What is machine learning?'):
 # ✅ To make it answer based on previous questions:
 
 # You need to feed the conversation history into the LLM.
-
 # There are two common ways in LangChain:
