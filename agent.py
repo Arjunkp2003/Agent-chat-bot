@@ -20,6 +20,9 @@ search_tool = Tool(
     description="Useful for answering questions about current events or general web search."
 )
 
+
+
+
 # ---- Streamlit UI ----
 st.title('Langchain - Chat with Search')
 st.sidebar.title('Settings')
@@ -57,12 +60,14 @@ if prompt := st.chat_input(placeholder='What is machine learning?'):
 
     tools = [search_tool, arxiv_tool, wiki_tool]
 
+
     search_engine = initialize_agent(
-        tools,
-        llm,
-        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-        handle_parsing_errors=True
-    )
+    tools,
+    llm,
+    agent=AgentType.CONVERSATIONAL_REACT_DESCRIPTION,
+    handle_parsing_errors=True
+)
+
 # What a CallbackHandler does
 
 # In LangChain, callbacks are hooks that let you see what’s happening inside the agent/LLM while it’s running.
@@ -137,4 +142,5 @@ if prompt := st.chat_input(placeholder='What is machine learning?'):
 # ✅ To make it answer based on previous questions:
 
 # You need to feed the conversation history into the LLM.
+
 # There are two common ways in LangChain:
